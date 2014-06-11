@@ -20,7 +20,7 @@ module WashOut
       if soap_action.blank?
         envelope = nori(controller.soap_config.snakecase_input).parse(soap_body env).
           values_at(:envelope, :Envelope).compact.first
-        if envelope
+        if envelope.present?
           body = envelope.values_at(:body, :Body).compact.first
           if body && body.keys.present?
             soap_action = body.keys.first.to_s
