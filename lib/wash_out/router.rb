@@ -15,14 +15,17 @@ module WashOut
     def parse_soap_action(env)
       return env['wash_out.soap_action'] if env['wash_out.soap_action']
 
-      soap_action = controller.soap_config.soap_action_routing ? env['HTTP_SOAPACTION'].to_s.gsub(/^"(.*)"$/, '\1')
-                                                               : ''
+      soap_action = controller.soap_config.soap_action_routing ? env['HTTP_SOAPACTION'].to_s.gsub(/^"(.*)"$/, '\1') : ''
 
       if soap_action.blank?
-        soap_action = nori(controller.soap_config.snakecase_input).parse(soap_body env)
-            .values_at(:envelope, :Envelope).compact.first
-            .values_at(:body, :Body).compact.first
-            .keys.first.to_s
+        envelope = nori(controller.soap_config.snakecase_input).parse(soap_body env).
+          values_at(:envelope, :Envelope).compact.first
+        if envelope
+          body = envelope.values_at(:body, :Body).compact.first
+          if body && body.keys.present?
+            soap_action = body.keys.first.to_s
+          end  
+        end
       end
 
       # RUBY18 1.8 does not have force_encoding.
